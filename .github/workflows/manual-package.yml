@@ -1,0 +1,25 @@
+# This workflow will build a package using Maven and then publish it to GitHub packages when a release is created
+# For more information see: https://github.com/actions/setup-java#apache-maven-with-a-settings-path
+
+name: Manual Maven Package
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Java
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+
+    - name: Build with Maven
+      run: mvn package
+
+    - name: Publish to GitHub Packages Apache Maven
+      run: mvn deploy -DaltSnapshotDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltReleaseDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -Dtoken=${{ github.token }}
