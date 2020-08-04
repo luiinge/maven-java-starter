@@ -32,7 +32,7 @@ to collect coverage data
 - Generates JAR files with the source
 - Pre-configured profiles:
     - Documentation generation
-    - Maven Central Repository deployment
+    - OSSRH deployment
 
 ## Profiles
 
@@ -48,11 +48,13 @@ folder `${project.docdir}` (by default `./docs`):
 Notice that, using this profile, the above reports are *not* generated in the `site` phase
 but as soon as their source data is available.
 
-### Maven Central Repository deployment
-This profile (enabled using `-P maven-central`) generates the artifacts required in order to
-deploy the project to the Maven Central Repository according to
+### OSSRH deployment
+This profile (enabled using `-P ossrh`) generates the artifacts required in order to
+deploy the project to the Sonatype Open Source Software Repository Hosting according to
 [Sonatype Requeriments](https://central.sonatype.org/pages/requirements.html) and
-[Configuring Your Project for Deployment](https://help.sonatype.com/repomanager2/staging-releases/configuring-your-project-for-deployment)
+[Configuring Your Project for Deployment](https://help.sonatype.com/repomanager2/staging-releases/configuring-your-project-for-deployment).
+
+(You would require configuring your local `settings.xml` file regardless)
 
 ## Dependency versions
 Every dependency version is set using a property, so that inherited modules can override
