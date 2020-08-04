@@ -30,4 +30,4 @@ jobs:
       run: mvn package
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -Dregistry=https://maven.pkg.github.com/luiinge -DaltSnapshotDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltReleaseDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -Dtoken=${{ github.token }}
+      run: mvn deploy -Dregistry=https://maven.pkg.github.com/luiinge -DaltSnapshotDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltReleaseDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -Dusername=luiinge -Dpassword=${{ secrets.GITHUB_TOKEN }}
