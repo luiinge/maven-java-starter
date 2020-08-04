@@ -13,13 +13,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    
     - name: Set up Java
       uses: actions/setup-java@v1
       with:
         java-version: 11
+    
+    - name: Cache Maven packages
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
 
     - name: Build with Maven
       run: mvn package
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -DaltSnapshotDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltReleaseDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -Dtoken=${{ github.token }}
+      run: mvn deploy -Dregistry=https://maven.pkg.github.com/luiinge -DaltSnapshotDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltReleaseDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -DaltDeploymentRepository=github::default::https://maven.pkg.github.com/luiinge -Dtoken=${{ github.token }}
