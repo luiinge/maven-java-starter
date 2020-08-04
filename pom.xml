@@ -358,7 +358,7 @@
         <!--Prepare the project for deployment in Maven Central Repository -->
 
         <profile>
-            <id>release</id>
+            <id>ossrh</id>
             <build>
                 <plugins>
                     <!-- Generate additional jar with sources -->
@@ -418,6 +418,16 @@
                     </plugin>
                 </plugins>
             </build>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
         </profile>
 
     </profiles>
