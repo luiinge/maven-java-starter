@@ -1,0 +1,427 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>luiinge.javatools</groupId>
+    <artifactId>maven-java-starter</artifactId>
+    <version>11.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>Maven Java starter</name>
+    <description>Base configuration for Java projects build with Maven</description>
+    <url>${github.project.url}/</url>
+
+    <organization>
+        <name>luiinge</name>
+        <url>https://github.com/luiinge</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Luis Iñesta Gelabert</name>
+            <email>luiinge@gmail.com</email>
+            <organization>${github.user}</organization>
+            <organizationUrl>${github.user.url}</organizationUrl>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://repository.jboss.org/licenses/mit.txt</url>
+        </license>
+    </licenses>
+
+    <issueManagement>
+        <system>Github</system>
+        <url>${github.project.url}/issues</url>
+    </issueManagement>
+
+
+    <scm>
+        <connection>scm:git:git://${github.host}/${github.user}/${github.project}.git</connection>
+        <developerConnection>scm:git:ssh://${github.host}:${github.user}/${github.project}.git</developerConnection>
+        <url>https://${github.host}/${github.user}/${github.project}/tree/master</url>
+    </scm>
+
+
+    <properties>
+        <!-- properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <java.version>11</java.version>
+        <project.docdir>${project.basedir}/docs</project.docdir>
+        <project.docdir.javadoc>${project.docdir}/apidocs</project.docdir.javadoc>
+        <project.docdir.coverage>${project.docdir}/coverage</project.docdir.coverage>
+        <!-- dependencies -->
+        <slf4j-api.version>1.7.30</slf4j-api.version>
+        <junit.version>4.13</junit.version>
+        <hamcrest.version>2.2</hamcrest.version>
+        <log4j.version>2.13.0</log4j.version>
+        <assertj.version>3.16.1</assertj.version>
+        <!-- build plugins' versions -->
+        <maven.compiler.version>3.8.0</maven.compiler.version>
+        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.surefire.version>2.18.1</maven.surefire.version>
+        <maven.failsafe.version>2.18.1</maven.failsafe.version>
+        <maven.jacoco.version>0.8.2</maven.jacoco.version>
+        <maven.clean.version>3.1.0</maven.clean.version>
+        <maven.source.version>3.0.1</maven.source.version>
+        <maven.javadoc.version>3.0.0</maven.javadoc.version> <!-- with 3.2.0 doesn't work! -->
+        <maven.surefire-report.version>3.0.0-M5</maven.surefire-report.version>
+        <maven.info-report.version>3.1.0</maven.info-report.version>
+        <maven.gpg.version>1.5</maven.gpg.version>
+        <maven.nexus-staging.version>1.6.7</maven.nexus-staging.version>
+        <!-- other properties -->
+        <maven.nexus-staging.url>https://oss.sonatype.org/</maven.nexus-staging.url>
+        <github.host>github.com</github.host>
+        <github.user>${project.organization.name}</github.user>
+        <github.project>${project.artifactId}</github.project>
+        <github.user.url>https://${github.host}/${github.user}</github.user.url>
+        <github.project.url>${github.user.url}/${github.project}</github.project.url>
+    </properties>
+
+
+
+    <dependencies>
+        <!-- api dependencies -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- test dependencies -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>hamcrest-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.hamcrest</groupId>
+                    <artifactId>hamcrest-library</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>${hamcrest.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j.version}</version><!--$NO-MVN-MAN-VER$ -->
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- in case log4j-slf4j-impl is used outside test, remove its dependency with slf4j-api,
+                otherwise could conflict with the declared api version -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j.version}</version>
+                <scope>compile</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-api</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+
+    <build>
+        <plugins>
+            <!-- specific version of maven compiler, since Java modules are not well managed in previous
+                versions. Also, activate lint=all ) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.version}</version>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <verbose>${verbose}</verbose>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <!-- Surefire with JaCoCo agent -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven.surefire.version}</version>
+                <configuration>
+                    <argLine>
+                        ${surefireJacocoAgent}
+                        -Djdk.net.URLClassPath.disableClassPathURLCheck=true
+                        --illegal-access=permit
+                    </argLine>
+                </configuration>
+            </plugin>
+            <!-- Failsafe with JaCoCo agent -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${maven.failsafe.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                        <configuration>
+                            <argLine>
+                                ${failsafeJacocoAgent}
+                                -Djdk.net.URLClassPath.disableClassPathURLCheck=true
+                                --illegal-access=permit
+                            </argLine>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- JaCoCo coverage -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${maven.jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>pre-unit-test</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <append>true</append>
+                            <destFile>${project.build.directory}/jacoco.exec</destFile>
+                            <propertyName>surefireJacocoAgent</propertyName>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <goals>
+                            <goal>prepare-agent-integration</goal>
+                        </goals>
+                        <configuration>
+                            <append>true</append>
+                            <destFile>${project.build.directory}/jacoco-it.exec</destFile>
+                            <propertyName>failsafeJacocoAgent</propertyName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+
+
+    <!-- Custom build profiles -->
+
+
+    <profiles>
+        <!--Generate Javadoc and test reports in ${prject.docdir} folder -->
+        <profile>
+            <id>gendoc</id>
+            <build>
+                <plugins>
+                    <!-- Clean documentation data -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <version>${maven.clean.version}</version>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>${project.docdir}</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </plugin>
+                    <!-- Generate Javadoc -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven.javadoc.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-javadoc</id>
+                                <goals>
+                                    <goal>javadoc</goal>
+                                </goals>
+                                <phase>process-sources</phase>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <show>public</show>
+                            <encoding>${project.reporting.outputEncoding}</encoding>
+                            <excludePackageNames>*.internal;*.impl</excludePackageNames>
+                            <quiet>true</quiet>
+                            <noqualifier>all</noqualifier>
+                            <reportOutputDirectory>${project.docdir.javadoc}</reportOutputDirectory>
+                            <notimestamp>true</notimestamp>
+                        </configuration>
+                    </plugin>
+                    <!-- Generate JaCoCo coverage report -->
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${maven.jacoco.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-jacoco-report</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.docdir.coverage}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Generate Surefire report -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-report-plugin</artifactId>
+                        <version>${maven.surefire-report.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-surefire-report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report-only</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.docdir}</outputDirectory>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>generate-failsafe-report</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>failsafe-report-only</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.docdir}</outputDirectory>
+                                </configuration>
+                            </execution>
+
+                        </executions>
+                    </plugin>
+                    <!-- Generate general info reports -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                        <version>${maven.info-report.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-info-report</id>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.docdir}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!--Prepare the project for deployment in Maven Central Repository -->
+
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <!-- Generate additional jar with sources -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven.source.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Generate additional jar with javadoc -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven.javadoc.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Sign file using GPG -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Nexus staging -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>${maven.nexus-staging.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>${maven.nexus-staging.url}</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
+
+
+</project>
+
