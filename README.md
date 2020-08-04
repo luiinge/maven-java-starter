@@ -9,9 +9,9 @@ setting up the basic infrastructure for a new Java project.
 Simply use this artifact as the parent project. Add the following in your `pom.xml`:
 ```xml
    <parent>
-        <groupId>luiinge.javatools</groupId>
-        <artifactId>maven-java11-starter</artifactId>
-        <version>1.0.0</version>
+        <groupId>io.github.luiinge</groupId>
+        <artifactId>maven-java-starter</artifactId>
+        <version>11.0.0</version>
    </parent>
 ```
 
