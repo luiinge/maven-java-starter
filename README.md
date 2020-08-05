@@ -1,6 +1,10 @@
 
 # Maven Java starter
 
+![GitHub](https://img.shields.io/github/license/luiinge/maven-java-starter?style=plastic)
+![Maven Central](https://img.shields.io/maven-central/v/io.github.luiinge/maven-java-starter?style=plastic)
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/luiinge/maven-java-starter/Test%20with%20Maven/master?style=plastic)
+
 This artifact is a simple `pom.xml` configuration file that eases the sometimes painful process of
 setting up the basic infrastructure for a new Java project.
 
