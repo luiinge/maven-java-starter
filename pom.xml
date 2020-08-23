@@ -5,7 +5,7 @@
 
     <groupId>io.github.luiinge</groupId>
     <artifactId>maven-java-starter</artifactId>
-    <version>11.0.0</version>
+    <version>11.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Maven Java starter</name>
@@ -51,9 +51,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>11</java.version>
-        <project.docdir>${project.basedir}/docs</project.docdir>
+        <project.docdir>${project.build.directory}/site</project.docdir>
         <project.docdir.javadoc>${project.docdir}/apidocs</project.docdir.javadoc>
-        <project.docdir.coverage>${project.docdir}/coverage</project.docdir.coverage>
+        <project.docdir.coverage>${project.docdir}/jacoco</project.docdir.coverage>
         <!-- dependencies -->
         <slf4j-api.version>1.7.30</slf4j-api.version>
         <junit.version>4.13</junit.version>
@@ -75,6 +75,11 @@
         <maven.info-report.version>3.1.0</maven.info-report.version>
         <maven.gpg.version>1.5</maven.gpg.version>
         <maven.nexus-staging.version>1.6.7</maven.nexus-staging.version>
+        <maven.sonar.version>3.7.0.1746</maven.sonar.version>
+        <maven.checkstyle.version>3.1.1</maven.checkstyle.version>
+        <maven.pmd.version>3.13.0</maven.pmd.version>
+        <maven.spotbugs.version>4.0.4</maven.spotbugs.version>
+        <maven.versions.version>2.8.1</maven.versions.version>
         <!-- other properties -->
         <maven.nexus-staging.url>https://oss.sonatype.org/</maven.nexus-staging.url>
         <github.host>github.com</github.host>
@@ -82,6 +87,18 @@
         <github.project>${project.artifactId}</github.project>
         <github.user.url>https://${github.host}/${github.user}</github.user.url>
         <github.project.url>${github.user.url}/${github.project}</github.project.url>
+        <sonar.projectKey>${project.organization.name}_${project.artifactId}</sonar.projectKey>
+        <sonar.organization>${project.organization.name}</sonar.organization>
+        <sonar.host.url>http://sonarcloud.io</sonar.host.url>
+        <maven.checkstyle.config>google_checks.xml</maven.checkstyle.config>
+        <!-- enable/disable sections -->
+        <javadoc.skip>false</javadoc.skip>
+        <surefire.skip>false</surefire.skip>
+        <jacoco.skip>false</jacoco.skip>
+        <dependency.skip>false</dependency.skip>
+        <checkstyle.skip>false</checkstyle.skip>
+        <pmd.skip>false</pmd.skip>
+        <spotbugs.skip>false</spotbugs.skip>
     </properties>
 
 
@@ -129,8 +146,8 @@
             <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
+
 
 
     <dependencyManagement>
@@ -154,12 +171,29 @@
 
 
 
+
     <build>
         <plugins>
+
+
+            <!-- Clean documentation directory along with target -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>${maven.clean.version}</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>${project.docdir}</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+
             <!-- specific version of maven compiler, since Java modules are not well managed in previous
                 versions. Also, activate lint=all ) -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven.compiler.version}</version>
                 <configuration>
@@ -170,9 +204,18 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-            <!-- Surefire with JaCoCo agent -->
+
+
+            <!-- Source as Jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven.source.version}</version>
+            </plugin>
+
+
+            <!-- Surefire with JaCoCo agent -->
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven.surefire.version}</version>
                 <configuration>
@@ -183,6 +226,36 @@
                     </argLine>
                 </configuration>
             </plugin>
+
+
+            <!-- Surefire report -->
+            <plugin>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${maven.surefire.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-surefire-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report-only</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>generate-failsafe-report</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>failsafe-report-only</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <linkXRef>false</linkXRef>
+                    <outputDirectory>${project.docdir}</outputDirectory>
+                    <skipSurefireReport>${report.surefire.skip}</skipSurefireReport>
+                </configuration>
+            </plugin>
+
+
             <!-- Failsafe with JaCoCo agent -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -203,6 +276,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+
             <!-- JaCoCo coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -233,6 +308,7 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 
@@ -240,52 +316,132 @@
 
 
     <!-- Custom build profiles -->
-
-
     <profiles>
-        <!--Generate Javadoc and test reports in ${prject.docdir} folder -->
+
+        <!-- Dependency version analysis -->
         <profile>
-            <id>gendoc</id>
+            <id>check.versions</id>
+            <activation>
+                <property>
+                    <name>check.versions</name>
+                </property>
+            </activation>
             <build>
                 <plugins>
-                    <!-- Clean documentation data -->
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-clean-plugin</artifactId>
-                        <version>${maven.clean.version}</version>
-                        <configuration>
-                            <filesets>
-                                <fileset>
-                                    <directory>${project.docdir}</directory>
-                                </fileset>
-                            </filesets>
-                        </configuration>
-                    </plugin>
-                    <!-- Generate Javadoc -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${maven.javadoc.version}</version>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                        <version>${maven.versions.version}</version>
                         <executions>
                             <execution>
-                                <id>generate-javadoc</id>
+                                <phase>initialize</phase>
                                 <goals>
-                                    <goal>javadoc</goal>
+                                    <goal>display-dependency-updates</goal>
+                                    <goal>display-property-updates</goal>
                                 </goals>
-                                <phase>process-sources</phase>
                             </execution>
                         </executions>
-                        <configuration>
-                            <show>public</show>
-                            <encoding>${project.reporting.outputEncoding}</encoding>
-                            <excludePackageNames>*.internal;*.impl</excludePackageNames>
-                            <quiet>true</quiet>
-                            <noqualifier>all</noqualifier>
-                            <reportOutputDirectory>${project.docdir.javadoc}</reportOutputDirectory>
-                            <notimestamp>true</notimestamp>
-                        </configuration>
                     </plugin>
-                    <!-- Generate JaCoCo coverage report -->
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!-- Static analysis -->
+        <profile>
+            <id>check.code</id>
+            <activation>
+                <property>
+                    <name>check.code</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Checkstyle -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${maven.checkstyle.version}</version>
+                        <configuration>
+                            <configLocation>${maven.checkstyle.config}</configLocation>
+                            <headerLocation>LICENSE</headerLocation>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${checkstyle.skip}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- PMD -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>${maven.pmd.version}</version>
+                        <configuration>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>check-pmd</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                    <goal>cpd-check</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${pmd.skip}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Spotbugs -->
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${maven.spotbugs.version}</version>
+                        <configuration>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>check-spotbugs</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${spotbugs.skip}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+        <!-- Generate reports -->
+        <profile>
+            <id>generate.reports</id>
+            <activation>
+                <property>
+                    <name>generate.reports</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+
+                    <!-- JaCoCo coverage -->
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
@@ -299,54 +455,181 @@
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.docdir.coverage}</outputDirectory>
+                                    <skip>${jacoco.skip}</skip>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
-                    <!-- Generate Surefire report -->
+
+
+                    <!-- Generate Javadoc -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-report-plugin</artifactId>
-                        <version>${maven.surefire-report.version}</version>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven.javadoc.version}</version>
+                        <configuration>
+                            <show>public</show>
+                            <encoding>${project.reporting.outputEncoding}</encoding>
+                            <excludePackageNames>*.internal;*.impl</excludePackageNames>
+                            <quiet>true</quiet>
+                            <noqualifier>all</noqualifier>
+                            <notimestamp>true</notimestamp>
+                            <reportOutputDirectory>${project.docdir.javadoc}</reportOutputDirectory>
+                        </configuration>
                         <executions>
                             <execution>
-                                <id>generate-surefire-report</id>
-                                <phase>test</phase>
                                 <goals>
-                                    <goal>report-only</goal>
+                                    <goal>javadoc</goal>
                                 </goals>
+                                <phase>process-sources</phase>
                                 <configuration>
-                                    <outputDirectory>${project.docdir}</outputDirectory>
+                                    <skip>${javadoc.skip}</skip>
                                 </configuration>
                             </execution>
-                            <execution>
-                                <id>generate-failsafe-report</id>
-                                <phase>post-integration-test</phase>
-                                <goals>
-                                    <goal>failsafe-report-only</goal>
-                                </goals>
-                                <configuration>
-                                    <outputDirectory>${project.docdir}</outputDirectory>
-                                </configuration>
-                            </execution>
-
                         </executions>
                     </plugin>
-                    <!-- Generate general info reports -->
+
+
+                    <!-- Dependency report -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-project-info-reports-plugin</artifactId>
                         <version>${maven.info-report.version}</version>
                         <executions>
                             <execution>
-                                <id>generate-info-report</id>
                                 <phase>process-resources</phase>
                                 <goals>
                                     <goal>dependencies</goal>
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.docdir}</outputDirectory>
+                                    <skip>${dependency.skip}</skip>
                                 </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+
+                    <!-- Checkstyle report -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${maven.checkstyle.version}</version>
+                        <configuration>
+                            <configLocation>${maven.checkstyle.config}</configLocation>
+                            <headerLocation>LICENSE</headerLocation>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-checkstyle-report</id>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>checkstyle</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${checkstyle.skip}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+
+                    </plugin>
+
+
+                    <!-- PMD -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>${maven.pmd.version}</version>
+                        <configuration>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-pmd-report</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>pmd</goal>
+                                    <goal>cpd</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${pmd.skip}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+
+
+                    <!-- Spotbugs -->
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${maven.spotbugs.version}</version>
+                        <configuration>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-spotbugs-report</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>spotbugs</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${spotbugs.skip}</skip>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+
+                    <!-- Dependency version updates -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                        <version>${maven.versions.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>dependency-updates-report</goal>
+                                    <goal>property-updates-report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+
+
+
+
+        <!-- Invoke SonarCloud scan -->
+        <profile>
+            <id>sonar</id>
+            <activation>
+                <property>
+                    <name>sonar.scan</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonarsource.scanner.maven</groupId>
+                        <artifactId>sonar-maven-plugin</artifactId>
+                        <version>${maven.sonar.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>sonar</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>
@@ -355,8 +638,10 @@
         </profile>
 
 
-        <!--Prepare the project for deployment in Maven Central Repository -->
 
+
+
+        <!--Prepare the project for deployment in Maven Central Repository -->
         <profile>
             <id>ossrh</id>
             <build>
@@ -386,6 +671,9 @@
                                 <goals>
                                     <goal>jar</goal>
                                 </goals>
+                                <configuration>
+                                    <skip>false</skip>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
