@@ -56,7 +56,7 @@
         <project.docdir.coverage>${project.docdir}/jacoco</project.docdir.coverage>
         <!-- dependencies -->
         <slf4j-api.version>1.7.30</slf4j-api.version>
-        <junit.version>4.13</junit.version>
+        <junit.version>4.13.1</junit.version>
         <hamcrest.version>2.2</hamcrest.version>
         <log4j.version>2.13.0</log4j.version>
         <assertj.version>3.16.1</assertj.version>
