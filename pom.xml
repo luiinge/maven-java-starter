@@ -5,7 +5,7 @@
 
     <groupId>io.github.luiinge</groupId>
     <artifactId>maven-java-starter</artifactId>
-    <version>11.1.0</version>
+    <version>11.2.0</version>
     <packaging>pom</packaging>
 
     <name>Maven Java starter</name>
@@ -56,7 +56,7 @@
         <project.docdir.coverage>${project.docdir}/jacoco</project.docdir.coverage>
         <!-- dependencies -->
         <slf4j-api.version>1.7.30</slf4j-api.version>
-        <junit.version>4.13</junit.version>
+        <junit.version>4.13.1</junit.version>
         <hamcrest.version>2.2</hamcrest.version>
         <log4j.version>2.13.0</log4j.version>
         <assertj.version>3.16.1</assertj.version>
@@ -70,7 +70,7 @@
         <maven.jacoco.version>0.8.2</maven.jacoco.version>
         <maven.clean.version>3.1.0</maven.clean.version>
         <maven.source.version>3.0.1</maven.source.version>
-        <maven.javadoc.version>3.0.0</maven.javadoc.version> <!-- with 3.2.0 doesn't work! -->
+        <maven.javadoc.version>3.0.0</maven.javadoc.version>
         <maven.surefire-report.version>3.0.0-M5</maven.surefire-report.version>
         <maven.info-report.version>3.1.0</maven.info-report.version>
         <maven.gpg.version>1.5</maven.gpg.version>
@@ -91,14 +91,7 @@
         <sonar.organization>${project.organization.name}</sonar.organization>
         <sonar.host.url>http://sonarcloud.io</sonar.host.url>
         <maven.checkstyle.config>google_checks.xml</maven.checkstyle.config>
-        <!-- enable/disable sections -->
-        <javadoc.skip>false</javadoc.skip>
-        <surefire.skip>false</surefire.skip>
-        <jacoco.skip>false</jacoco.skip>
-        <dependency.skip>false</dependency.skip>
-        <checkstyle.skip>false</checkstyle.skip>
-        <pmd.skip>false</pmd.skip>
-        <spotbugs.skip>false</spotbugs.skip>
+        <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     </properties>
 
 
@@ -347,7 +340,110 @@
         </profile>
 
 
-        <!-- Static analysis -->
+        <!-- Check code with Checkstyle -->
+        <profile>
+            <id>check.code.checkstyle</id>
+            <activation>
+                <property>
+                    <name>check.code.checkstyle</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Checkstyle -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${maven.checkstyle.version}</version>
+                        <configuration>
+                            <configLocation>${maven.checkstyle.config}</configLocation>
+                            <headerLocation>LICENSE</headerLocation>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!-- Check code with PMD -->
+        <profile>
+            <id>check.code.pmd</id>
+            <activation>
+                <property>
+                    <name>check.code.pmd</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- PMD -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>${maven.pmd.version}</version>
+                        <configuration>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>check-pmd</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                    <goal>cpd-check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!-- Check code with Spotbugs -->
+        <profile>
+            <id>check.code.spotbugs</id>
+            <activation>
+                <property>
+                    <name>check.code.spotbugs</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Spotbugs -->
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${maven.spotbugs.version}</version>
+                        <configuration>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>check-spotbugs</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+        <!-- Check code with every analysis tool -->
         <profile>
             <id>check.code</id>
             <activation>
@@ -374,9 +470,6 @@
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
-                                <configuration>
-                                    <skip>${checkstyle.skip}</skip>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -397,9 +490,6 @@
                                     <goal>check</goal>
                                     <goal>cpd-check</goal>
                                 </goals>
-                                <configuration>
-                                    <skip>${pmd.skip}</skip>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -418,8 +508,39 @@
                                 <goals>
                                     <goal>check</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+         <!-- Generate JaCoCo coverage -->
+        <profile>
+            <id>generate.reports.jacoco</id>
+            <activation>
+                <property>
+                    <name>generate.reports.jacoco</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- JaCoCo coverage -->
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${maven.jacoco.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-jacoco-report</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
                                 <configuration>
-                                    <skip>${spotbugs.skip}</skip>
+                                    <outputDirectory>${project.docdir.coverage}</outputDirectory>
                                 </configuration>
                             </execution>
                         </executions>
@@ -430,7 +551,221 @@
 
 
 
-        <!-- Generate reports -->
+        <!-- Generate Javadoc -->
+        <profile>
+            <id>generate.reports.javadoc</id>
+            <activation>
+                <property>
+                    <name>generate.reports.javadoc</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>          
+                    <!-- Generate Javadoc -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven.javadoc.version}</version>
+                        <configuration>
+                            <show>public</show>
+                            <encoding>${project.reporting.outputEncoding}</encoding>
+                            <excludePackageNames>*.internal;*.impl</excludePackageNames>
+                            <quiet>true</quiet>
+                            <noqualifier>all</noqualifier>
+                            <notimestamp>true</notimestamp>
+                            <reportOutputDirectory>${project.docdir.javadoc}</reportOutputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>javadoc</goal>
+                                </goals>
+                                <phase>process-sources</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+        <!-- Generate dependency report -->
+        <profile>
+            <id>generate.reports.dependency</id>
+            <activation>
+                <property>
+                    <name>generate.reports.dependency</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Dependency report -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                        <version>${maven.info-report.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.docdir}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+        <!-- Generate Checkstyle report -->
+        <profile>
+            <id>generate.reports.checkstyle</id>
+            <activation>
+                <property>
+                    <name>generate.reports.checkstyle</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${maven.checkstyle.version}</version>
+                        <configuration>
+                            <configLocation>${maven.checkstyle.config}</configLocation>
+                            <headerLocation>LICENSE</headerLocation>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-checkstyle-report</id>
+                                <phase>process-sources</phase>
+                                <goals>
+                                    <goal>checkstyle</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+
+        <!-- Generate PMD report -->
+        <profile>
+            <id>generate.reports.pmd</id>
+            <activation>
+                <property>
+                    <name>generate.reports.pmd</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>${maven.pmd.version}</version>
+                        <configuration>
+                            <linkXRef>false</linkXRef>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-pmd-report</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>pmd</goal>
+                                    <goal>cpd</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+
+
+        <!-- Generate Spotbugs report -->
+        <profile>
+            <id>generate.reports.spotbugs</id>
+            <activation>
+                <property>
+                    <name>generate.reports.spotbugs</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${maven.spotbugs.version}</version>
+                        <configuration>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>generate-spotbugs-report</id>
+                                <phase>compile</phase>
+                                <goals>
+                                    <goal>spotbugs</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+
+
+        <!-- Generate Dependency version update report -->
+        <profile>
+            <id>generate.reports.versions</id>
+            <activation>
+                <property>
+                    <name>generate.reports.versions</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+
+                    <!-- Dependency version updates -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>versions-maven-plugin</artifactId>
+                        <version>${maven.versions.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>dependency-updates-report</goal>
+                                    <goal>property-updates-report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+
+
+
+
+        <!-- Generate all above reports -->
         <profile>
             <id>generate.reports</id>
             <activation>
@@ -455,7 +790,6 @@
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.docdir.coverage}</outputDirectory>
-                                    <skip>${jacoco.skip}</skip>
                                 </configuration>
                             </execution>
                         </executions>
@@ -482,9 +816,6 @@
                                     <goal>javadoc</goal>
                                 </goals>
                                 <phase>process-sources</phase>
-                                <configuration>
-                                    <skip>${javadoc.skip}</skip>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -503,7 +834,6 @@
                                 </goals>
                                 <configuration>
                                     <outputDirectory>${project.docdir}</outputDirectory>
-                                    <skip>${dependency.skip}</skip>
                                 </configuration>
                             </execution>
                         </executions>
@@ -528,9 +858,6 @@
                                 <goals>
                                     <goal>checkstyle</goal>
                                 </goals>
-                                <configuration>
-                                    <skip>${checkstyle.skip}</skip>
-                                </configuration>
                             </execution>
                         </executions>
 
@@ -554,9 +881,6 @@
                                     <goal>pmd</goal>
                                     <goal>cpd</goal>
                                 </goals>
-                                <configuration>
-                                    <skip>${pmd.skip}</skip>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
@@ -578,9 +902,6 @@
                                 <goals>
                                     <goal>spotbugs</goal>
                                 </goals>
-                                <configuration>
-                                    <skip>${spotbugs.skip}</skip>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

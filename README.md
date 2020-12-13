@@ -6,7 +6,7 @@ Maven Java starter
 ![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/luiinge/maven-java-starter/Test%20with%20Maven/master?style=plastic)
 
 This artifact is a simple `pom.xml` configuration file that eases the sometimes painful process of
-setting up the basic infrastructure for a new Java project.
+setting up the basic infrastructure for a new Java project using Maven.
 
 
 Usage
@@ -17,7 +17,7 @@ Simply use this artifact as the parent project. Add the following in your `pom.x
    <parent>
         <groupId>io.github.luiinge</groupId>
         <artifactId>maven-java-starter</artifactId>
-        <version>11.1.0</version>
+        <version>11.2.0</version>
    </parent>
 ```
 
@@ -25,6 +25,9 @@ If your project already have a parent project, you may modify the parent `pom.xm
 viable option. As a last resort, you always can copy the configuration of this artifact and paste
 it into yours.
 
+> The *major* segment of the artifact version indicates the Java version that the configuration is 
+> tuned for (currently only Java 11), but nothing prevents you from using it with 
+> other versions
 
 
 What includes?
@@ -38,28 +41,102 @@ What includes?
 to collect coverage data
 - Generates JAR files with the source
 - Pre-configured profiles:
-    - Documentation generation
-    - OSSRH deployment
-    - SonarCloud analysis
-    - Other static analysis tools (Spotbugs, Checkstyle, PMD)
+    - Static analysis tools including Spotbugs, Checkstyle, and PMD
     - Obsolete dependencies analysis 
-
+    - Javadoc generation
+    - SonarCloud analysis  
+    - OSSRH deployment
+   
 
 Profiles
 ---------------------------------------------------------------------------------------------------
 
-### Documentation generation
-This profile (enabled by using either `-P generate.reports` or `-Dgenerate.reports`) produces 
-a set of artifacts in the folder `${project.docdir}` (by default `./target/site`):
-- Javadoc API documentation (only for public members and excluding `*.internal,*.impl` packages)
-- JaCoCo (coverage) report
-- Surefire (unit test) report
-- Failsafe (integration test) report
-- Dependencies report
-- Obsolete dependencies report 
+The pre-configured profiles include one o more Maven plugins into the build. Each profile can be 
+activated by using either its profile identifier, or a property with the same name. The 
+following invokations are equivalent:
+```shell
+mvn clean install -Pcheck.code.pmd,sonar
+mvn clean install -Dcheck.code.pmd -Dsonar
+```
+So, you may also enable certain profiles declaring the proper property:
+```xml
+<properties>
+    <check.code.pmd>true</check.code.pmd>
+    <sonar>true</sonar>
+</properties>
+```
+For an exhaustive list of every configuration option of each plugin, please check the corresponding 
+links provided at each profile section.
 
-Notice that, using this profile, the above reports are *not* generated in the `site` phase
-but as soon as their source data is available.
+
+### Static analysis tools
+
+#### `check.versions`
+Display new versions of the project dependencies using [Versions Maven Plugin](https://www.mojohaus.org/versions-maven-plugin/)
+#### `check.code.checkstyle`
+Check code quality using [Apache Maven Checkstyle Plugin](https://maven.apache.org/plugins/maven-checkstyle-plugin/)
+#### `check.code.pmd`
+Check code quality using [Apache Maven PMD Plugin](https://maven.apache.org/plugins/maven-pmd-plugin/)
+#### `check.code.spotbugs`
+Check code quality using [SpotBugs Maven Plugin](https://spotbugs.github.io/spotbugs-maven-plugin/)
+#### `check.code`
+Enable every `check.code.xxx` profile at the same time (just out of convenience)
+
+### Remote analysis tools
+
+#### `sonar`
+Perform a [SonarCloud](https://sonarcloud.io/projects) scan actions after completing the `verify` goal (since
+test results are part of the source data). You can configure the server connection properties using
+the following properties (although is pre-configured with the usual values):
+```
+    <sonar.projectKey>${project.organization.name}_${project.artifactId}</sonar.projectKey>
+    <sonar.organization>${project.organization.name}</sonar.organization>
+    <sonar.host.url>http://sonarcloud.io</sonar.host.url>
+```
+Tips:
+- You may want to specify the code branch by adding the argument `-Dsonar.branch.name=...`.  
+- You should establish the environment variable `SONAR_TOKEN` (different for each project).
+- You can include the results of other static analysis in your Sonar report by enabling the specific
+profile along with the `sonar` profile. For example, in order to notify the code coverage with
+JaCoCo, the command should be something like:
+  ```shell
+  mvn clean verify -Psonar,generate.reports.jacoco
+  ```  
+
+### Report generation
+
+> Using the following profiles, reports are *not* generated at the `site` phase
+> but as soon as their source data is available.
+
+#### `generate.reports.jacoco`
+Generate coverage report using [JaCoCo Maven Plugin](https://www.eclemma.org/jacoco/trunk/doc/maven.html). 
+The output directory is defined by the property `project.docdir.coverage`.
+
+#### `generate.reports.javadoc`
+Generate Javadoc documentation using [Apache Maven Javadoc Plugin](https://maven.apache.org/plugins/maven-javadoc-plugin/)
+. The preset configuration is set to only generate documentation for public methods and classes 
+that are not in a `*.internal` nor `*.impl` package. The output directory is defined by the 
+property `project.docdir.javadoc`.
+
+#### `generate.reports.dependency`
+Generate a project dependencies report using [Apache Maven Project Info Reports Plugin](https://maven.apache.org/plugins/maven-project-info-reports-plugin/)
+. The output directory is defined by the property `project.docdir`.
+
+#### `generate.reports.checkstyle`
+Generate the Checkstyle analysis report using [Apache Maven Checkstyle Plugin](https://maven.apache.org/plugins/maven-checkstyle-plugin/)
+. The output directory is defined by the property `project.docdir`.
+
+#### `generate.reports.pmd`
+Generate the Checkstyle analysis report using [Apache Maven PMD Plugin](https://maven.apache.org/plugins/maven-pmd-plugin/)
+. The output directory is defined by the property `project.docdir`.
+
+#### `generate.reports.spotbugs`
+Generate the Checkstyle analysis report using [SpotBugs Maven Plugin](https://spotbugs.github.io/spotbugs-maven-plugin/)
+. The output directory is defined by the property `project.docdir`.
+
+#### `generate.reports`
+Enable every `generate.reports.xxx` profile at the same time (just out of convenience)
+
 
 ### OSSRH deployment
 This profile (enabled by using `-P ossrh`) generates the artifacts required in order to
@@ -70,66 +147,8 @@ deploy the project to the Sonatype Open Source Software Repository Hosting accor
 (You would require configuring your local `settings.xml` file regardless)
 
 
-### SonarCloud analysis
-This profile (enabled by using `-P sonar`) will perform a 
-[SonarCloud](https://sonarcloud.io/projects) scan actions after completing the `verify` goal (since
-test results are part of the source data). You can configure the server connection properties using
-the following properties (although is pre-configured with the usual values):
-
-```
-    <sonar.projectKey>${project.organization.name}_${project.artifactId}</sonar.projectKey>
-    <sonar.organization>${project.organization.name}</sonar.organization>
-    <sonar.host.url>http://sonarcloud.io</sonar.host.url>
-```
-Tips:
-- You may want to specify the code branch by adding the argument `'-Dsonar.branch.name=...`.  
-- You should establish the environment variable `SONAR_TOKEN` (different for each project).
-- You can include the results of other static analysis in your Sonar report by enabling the specific
-profile along with the `sonar` profile
 
 
-### Other static analysis tools
-
-This profile (enabled by using `-P check.code` or `-Dcheck.code`) will perform static analysis using 
-different tools. See the section [Static analysis tools](#static-analysis-tools) for detailed information. 
-
-
-### Obsolete dependency analysis
-This profile (enabled by using `-P check.versions` or `-Dcheck.versions` ) will show which dependencies
-have newer versions available.  
-
-
-
-Static analysis tools
----------------------------------------------------------------
-
-When using either `check.code` or `generate.reports` profiles, some static analysis tools
-will be used. 
-
-By default, each of them is enabled. In order to disable this analysis, set the property 
-`<tool>.skip` to `true` either in the `properties` section or using `-D<tool>.skip`.
- 
-### Checkstyle
-This option will perform a 
-[Checkstyle](https://checkstyle.sourceforge.io/) analysis. By default it will use the `google_checks`
-rule set, but you can change it using the property `maven.checkstyle.config`:
-
-```
-<maven.checkstyle.config>google_checks.xml</maven.checkstyle.config>
-```
-
-Disabled with property `checkstyle.skip`.
-
-### PMD
-This option will perform a [PMD](https://pmd.github.io/) analysis.
-It runs the Copy-Paste Detector (CPD) as well.
-
-Disabled with property `pmd.skip`.
-
-### Spotbugs
-This option will perform a [Spotbugs](https://spotbugs.github.io/) analysis.
-
-Disabled with property `spotbugs.skip`.
 
 
 
@@ -142,7 +161,7 @@ specific versions without change the overall configuration.
 ```xml
     <!-- dependencies -->
     <slf4j-api.version>1.7.30</slf4j-api.version>
-    <junit.version>4.13</junit.version>
+    <junit.version>4.13.1</junit.version>
     <hamcrest.version>2.2</hamcrest.version>
     <log4j.version>2.13.0</log4j.version>
     <assertj.version>3.16.1</assertj.version>
