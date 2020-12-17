@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [11.2.0]
 ----------------------------------------------------------------------------------------------------
 **Release date:** 2020-12-13
-### Modified:
+### Security:
 - Bump junit 4.13 to 4.13.1 due to a [low severity vulnerability](https://github.com/advisories/GHSA-269g-pwp5-87pp)
+### Changed:
 - Preset property `maven.javadoc.failOnError` to `false` in order to prevent builds failing because 
 the Javadoc executable was not able to be found
 ### Added:  
