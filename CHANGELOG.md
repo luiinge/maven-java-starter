@@ -3,7 +3,17 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org).
+
+
+[11.3.0]
+----------------------------------------------------------------------------------------------------
+**Release date:** 2021-07-25
+### Changed:
+- Properties `maven.compiler.releas`, `maven.compiler.source` and `maven.compiler.target` inherit value from `java.version`
+### Added:
+- Profiles `check.versions`, `generate.reports.versions`, and `ossrh` now check vulnerabilities in 
+dependencies according to the [National Vulnerability Database](https://nvd.nist.gov/)
 
 
 [11.2.0]

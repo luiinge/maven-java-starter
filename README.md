@@ -17,7 +17,7 @@ Simply use this artifact as the parent project. Add the following in your `pom.x
    <parent>
         <groupId>io.github.luiinge</groupId>
         <artifactId>maven-java-starter</artifactId>
-        <version>11.2.0</version>
+        <version>11.3.0</version>
    </parent>
 ```
 
@@ -72,7 +72,8 @@ links provided at each profile section.
 ### Static analysis tools
 
 #### `check.versions`
-Display new versions of the project dependencies using [Versions Maven Plugin](https://www.mojohaus.org/versions-maven-plugin/)
+Display new versions of the project dependencies using [Versions Maven Plugin](https://www.mojohaus.org/versions-maven-plugin/).  
+Also check vulnerabilities in dependencies using [OWASP Dependency Check](https://owasp.org/www-project-dependency-check/).
 #### `check.code.checkstyle`
 Check code quality using [Apache Maven Checkstyle Plugin](https://maven.apache.org/plugins/maven-checkstyle-plugin/)
 #### `check.code.pmd`
@@ -99,9 +100,9 @@ Tips:
 - You can include the results of other static analysis in your Sonar report by enabling the specific
 profile along with the `sonar` profile. For example, in order to notify the code coverage with
 JaCoCo, the command should be something like:
-  ```shell
-  mvn clean verify -Psonar,generate.reports.jacoco
-  ```  
+```
+   mvn clean verify -Psonar,generate.reports.jacoco
+```  
 
 ### Report generation
 

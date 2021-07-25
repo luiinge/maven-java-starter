@@ -5,7 +5,7 @@
 
     <groupId>io.github.luiinge</groupId>
     <artifactId>maven-java-starter</artifactId>
-    <version>11.2.0</version>
+    <version>11.3.0</version>
     <packaging>pom</packaging>
 
     <name>Maven Java starter</name>
@@ -62,9 +62,9 @@
         <assertj.version>3.16.1</assertj.version>
         <!-- build plugins' versions -->
         <maven.compiler.version>3.8.0</maven.compiler.version>
-        <maven.compiler.release>11</maven.compiler.release>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.surefire.version>2.18.1</maven.surefire.version>
         <maven.failsafe.version>2.18.1</maven.failsafe.version>
         <maven.jacoco.version>0.8.2</maven.jacoco.version>
@@ -80,6 +80,7 @@
         <maven.pmd.version>3.13.0</maven.pmd.version>
         <maven.spotbugs.version>4.0.4</maven.spotbugs.version>
         <maven.versions.version>2.8.1</maven.versions.version>
+        <maven.dependency-check.version>6.2.2</maven.dependency-check.version>
         <!-- other properties -->
         <maven.nexus-staging.url>https://oss.sonatype.org/</maven.nexus-staging.url>
         <github.host>github.com</github.host>
@@ -92,6 +93,7 @@
         <sonar.host.url>http://sonarcloud.io</sonar.host.url>
         <maven.checkstyle.config>google_checks.xml</maven.checkstyle.config>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+
     </properties>
 
 
@@ -331,6 +333,19 @@
                                 <goals>
                                     <goal>display-dependency-updates</goal>
                                     <goal>display-property-updates</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${maven.dependency-check.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>check</goal>
                                 </goals>
                             </execution>
                         </executions>
@@ -756,6 +771,22 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${maven.dependency-check.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <outputDirectory>${project.docdir}</outputDirectory>
+                        </configuration>
+                    </plugin>
 
                 </plugins>
             </build>
@@ -1024,6 +1055,23 @@
                             <nexusUrl>${maven.nexus-staging.url}</nexusUrl>
                             <autoReleaseAfterClose>true</autoReleaseAfterClose>
                         </configuration>
+                    </plugin>
+                    <!-- Check vulnerabilities -->
+                    <plugin>
+                        <groupId>org.owasp</groupId>
+                        <artifactId>dependency-check-maven</artifactId>
+                        <version>${maven.dependency-check.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>initialize</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                                <configuration>
+                                    <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
+                                </configuration>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
