@@ -59,7 +59,7 @@
         <junit.version>4.13.1</junit.version>
         <hamcrest.version>2.2</hamcrest.version>
         <log4j.version>2.13.0</log4j.version>
-        <assertj.version>3.16.1</assertj.version>
+        <assertj.version>3.27.7</assertj.version>
         <!-- build plugins' versions -->
         <maven.compiler.version>3.8.0</maven.compiler.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
